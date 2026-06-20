@@ -67,6 +67,7 @@ def run_demo():
     from src.reports.report_generator import generate_report
     from src.escalation.escalation_pipeline import escalate
     from config.policy_rules import COMPLIANCE_RULES, CLASS_ID_TO_RULE
+    from src.severity.severity_matrix import assign_severity_by_class_id
 
     init_db()
     print("[Demo] Generating synthetic violation events...")
@@ -86,8 +87,6 @@ def run_demo():
         dict(class_id=3, clip_id="demo_clip_008", confidence=0.61, frame_number=250, zone="Zone-2"),
         dict(class_id=3, clip_id="demo_clip_009", confidence=0.74, frame_number=180, zone="Zone-2"),
     ]
-
-    from src.severity.severity_matrix import assign_severity_by_class_id
 
     for i, demo in enumerate(demo_events):
         class_id = demo["class_id"]
