@@ -53,7 +53,9 @@ with st.sidebar:
     st.divider()
 
     clips_dir = st.text_input("Clips directory", value=str(ROOT / "data" / "clips"))
-    run_detection = st.button("▶ Run Detection on Clips", type="primary", use_container_width=True)
+    run_detection = st.button(
+        "▶ Run Detection on Clips", type="primary", use_container_width=True
+    )
 
     st.divider()
     st.markdown("**Policy Reference**")
@@ -61,7 +63,7 @@ with st.sidebar:
         color = SEVERITY_COLORS[rule["severity"]]
         st.markdown(
             f'<span style="color:{color}; font-size:12px">●</span> '
-            f'**{rule["behavior_class"]}** — `{rule["severity"]}`',
+            f"**{rule['behavior_class']}** — `{rule['severity']}`",
             unsafe_allow_html=True,
         )
 
@@ -70,7 +72,11 @@ if run_detection:
     st.toast("Starting detection pipeline...", icon="🔄")
     with st.spinner("Running detection on clips..."):
         try:
-            from src.detection.detection_engine import process_directory, load_yolo_model
+            from src.detection.detection_engine import (
+                process_directory,
+                load_yolo_model,
+            )
+
             model = load_yolo_model()
             clips_path = Path(clips_dir)
             if clips_path.exists():
@@ -114,7 +120,7 @@ if view == "📹 Live Feed Monitor":
                         Clip: <b>{clip}</b> | Zone: <b>{zone}</b>
                     </p>
                     <p style="margin:4px 0; color:#888">
-                        {alert.get('event_description','')[:200]}
+                        {alert.get("event_description", "")[:200]}
                     </p>
                 </div>
                 <style>
@@ -130,8 +136,13 @@ if view == "📹 Live Feed Monitor":
 
     # Latest clip viewer
     clips_path = Path(clips_dir)
-    clip_files = sorted(clips_path.glob("*.mp4")) + sorted(clips_path.glob("*.avi")) \
-                 + sorted(clips_path.glob("*.mov")) if clips_path.exists() else []
+    clip_files = (
+        sorted(clips_path.glob("*.mp4"))
+        + sorted(clips_path.glob("*.avi"))
+        + sorted(clips_path.glob("*.mov"))
+        if clips_path.exists()
+        else []
+    )
 
     col1, col2 = st.columns([2, 1])
 
@@ -168,9 +179,9 @@ if view == "📹 Live Feed Monitor":
                 f'<div style="background:{color}22; border:2px solid {color}; '
                 f'border-radius:8px; padding:12px; text-align:center;">'
                 f'<h2 style="color:{color}">{sev}</h2>'
-                f'<p>{latest["behavior_class"]}</p>'
+                f"<p>{latest['behavior_class']}</p>"
                 f'<p style="font-size:12px; color:#888">{latest["timestamp"][:19]}</p>'
-                f'</div>',
+                f"</div>",
                 unsafe_allow_html=True,
             )
             st.divider()
@@ -180,9 +191,9 @@ if view == "📹 Live Feed Monitor":
                 st.markdown(
                     f'<p style="font-size:13px">'
                     f'<span style="color:{c}">●</span> '
-                    f'<b>{e["behavior_class"]}</b><br>'
+                    f"<b>{e['behavior_class']}</b><br>"
                     f'<span style="color:#888; font-size:11px">{e["clip_id"]} · {e["timestamp"][11:19]}</span>'
-                    f'</p>',
+                    f"</p>",
                     unsafe_allow_html=True,
                 )
 
@@ -190,7 +201,11 @@ if view == "📹 Live Feed Monitor":
     st.divider()
     st.subheader("Recent Violation Frames")
     frames_dir = ROOT / "outputs" / "frames"
-    frame_files = sorted(frames_dir.glob("*.jpg"), reverse=True)[:6] if frames_dir.exists() else []
+    frame_files = (
+        sorted(frames_dir.glob("*.jpg"), reverse=True)[:6]
+        if frames_dir.exists()
+        else []
+    )
 
     if frame_files:
         cols = st.columns(min(len(frame_files), 3))
@@ -274,7 +289,9 @@ elif view == "📋 Historical Log & Export":
             default=["LOW", "MEDIUM", "HIGH", "CRITICAL"],
         )
     with col2:
-        behavior_options = ["All"] + [r["behavior_class"] for r in COMPLIANCE_RULES.values()]
+        behavior_options = ["All"] + [
+            r["behavior_class"] for r in COMPLIANCE_RULES.values()
+        ]
         behavior_filter = st.selectbox("Behavior Class", behavior_options)
     with col3:
         limit = st.slider("Max records", 50, 1000, 200)
@@ -294,21 +311,27 @@ elif view == "📋 Historical Log & Export":
         # Color-coded table
         def color_severity(val):
             colors_map = {
-                "LOW":      "background-color: #22c55e33",
-                "MEDIUM":   "background-color: #f59e0b33",
-                "HIGH":     "background-color: #ef444433",
+                "LOW": "background-color: #22c55e33",
+                "MEDIUM": "background-color: #f59e0b33",
+                "HIGH": "background-color: #ef444433",
                 "CRITICAL": "background-color: #7c3aed33",
             }
             return colors_map.get(val, "")
 
         display_cols = [
-            "timestamp", "clip_id", "zone", "behavior_class",
-            "severity", "policy_rule_ref", "escalation_action", "confidence"
+            "timestamp",
+            "clip_id",
+            "zone",
+            "behavior_class",
+            "severity",
+            "policy_rule_ref",
+            "escalation_action",
+            "confidence",
         ]
         display_df = df[[c for c in display_cols if c in df.columns]]
 
         st.dataframe(
-            display_df.style.applymap(color_severity, subset=["severity"]),
+            display_df.style.map(color_severity, subset=["severity"]),
             use_container_width=True,
             height=400,
         )
@@ -347,13 +370,17 @@ elif view == "📋 Historical Log & Export":
 
         with acol1:
             import plotly.express as px
+
             if "severity" in df.columns:
                 sev_counts = df["severity"].value_counts().reset_index()
                 sev_counts.columns = ["severity", "count"]
                 color_map = {k: v for k, v in SEVERITY_COLORS.items()}
                 fig = px.pie(
-                    sev_counts, values="count", names="severity",
-                    color="severity", color_discrete_map=color_map,
+                    sev_counts,
+                    values="count",
+                    names="severity",
+                    color="severity",
+                    color_discrete_map=color_map,
                     title="Violations by Severity",
                 )
                 st.plotly_chart(fig, use_container_width=True)
@@ -363,9 +390,12 @@ elif view == "📋 Historical Log & Export":
                 bc_counts = df["behavior_class"].value_counts().reset_index()
                 bc_counts.columns = ["behavior_class", "count"]
                 fig2 = px.bar(
-                    bc_counts, x="behavior_class", y="count",
+                    bc_counts,
+                    x="behavior_class",
+                    y="count",
                     title="Violations by Behavior Class",
-                    color="count", color_continuous_scale="reds",
+                    color="count",
+                    color_continuous_scale="reds",
                 )
                 fig2.update_xaxes(tickangle=15)
                 st.plotly_chart(fig2, use_container_width=True)
